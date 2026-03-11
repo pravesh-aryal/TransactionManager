@@ -148,6 +148,62 @@ void *committx(void *arg)
 void *do_commit_abort_operation(long t, char status){
 
   // write your code
+  // init lock
+  zgt_p(0);
+
+    zgt_tx *inittx = get_tx(t);
+
+    if (inittx == NULL) 
+    {
+        fprintf(ZGT_Sh->logfile, "Trying to Commit/Abort a Tx:%d that does not exist\n", t);
+        fflush(ZGT_Sh->logfile);
+        // must unlock before stopping
+        zgt_v(0);
+        return NULL;
+    }
+
+    tx->status = status;
+
+    // release locks on objects
+    tx -> free_locks(); 
+
+    // release waiting transactions on aborted/committed objects held
+    // count of how many transactions are waiting on semaphore
+    int waiting = 0;
+    zgt_tx *temporary = ZGT_Sh->lastr;
+
+    while (temporary != NULL) 
+    {
+        if (temporary->semno == t && temporary->status == TR_WAIT) 
+        {
+            waiting++;
+        }
+        temp = temporary->nextr;
+    }
+    
+    // do v on waiting transactions to get next for lock
+    for (int i = 0; i < waiting; i++) 
+    {
+        zgt_v(t); 
+    }
+
+    // Write to the log file
+    if (status == TR_END) 
+    {
+        fprintf(ZGT_Sh->logfile, "T%d\t  \tCommitTx\t\t\t\t\t\n", t);
+        inittx->remove_tx();
+    } 
+    
+    else 
+    {
+        fprintf(ZGT_Sh->logfile, "T%d\t  \tAbortTx\t\t\t\t\t\n", t);
+    }
+
+    fflush(ZGT_Sh->logfile);
+
+    // release lock
+    zgt_v(0);
+    return NULL;
 }
 
 int zgt_tx::remove_tx ()
