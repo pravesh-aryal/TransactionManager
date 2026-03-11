@@ -125,6 +125,9 @@ void *aborttx(void *arg)
   struct param *node = (struct param*)arg;// get tid and count  
 
   //write your code
+  start_operation(node->tid, node->count);
+  do_commit_abort_operation(node->tid, TR_END);
+  finish_operation(node->tid)
 
   pthread_exit(NULL);			// thread exit
 }
@@ -136,6 +139,10 @@ void *committx(void *arg)
   struct param *node = (struct param*)arg;// get tid and count
 
   //write your code
+  start_operation(node->tid, node->count);
+  do_commit_abort_operation(node->tid, TR_ABORT);
+  finish_operation(node->tid)
+
   pthread_exit(NULL);			// thread exit
 }
 
