@@ -92,30 +92,34 @@ int zgt_tm::TxRead(long tid, long obno, int thrNum)
    // Then get the lock and perform the read operation.
    //  Call the read function in transaction. 
    //now create the thread and call the method readtx(void *)
-   
-#ifdef TM_DEBUG
-   printf("\ncreating TxRead thread for Tx: %d\n", tid);fflush(stdout);
+   #ifdef TM_DEBUG
+   printf("\ncreating TxWrite thread for Tx: %ld\n", tid);
    fflush(stdout);
 #endif
+
    pthread_t thread1;
-   
+
    struct param *nodeinfo = (struct param*)malloc(sizeof(struct param));
+
    nodeinfo->tid = tid;
    nodeinfo->obno = obno;
    nodeinfo->Txtype = ' ';
    nodeinfo->count = --SEQNUM[tid];
+
    int status;
-   status = pthread_create(&threadid[thrNum],NULL,readtx,(void*)nodeinfo);
+
+   status = pthread_create(&threadid[thrNum], NULL, writetx, (void*)nodeinfo);
+
    if (status){
      printf("ERROR: return code from pthread_create() is:%d\n", status);
      exit(-1);
    }
-   
+
 #ifdef TM_DEBUG
-   printf("\nexiting TxRead thread create for Tx: %d\n", tid);
+   printf("\nexiting TxWrite thread create for Tx: %ld\n", tid);
    fflush(stdout);
 #endif
-   return(0);   //successful operation
+   return(0); //successful operation
  }
 
 int zgt_tm::TxWrite(long tid, long obno, int thrNum)
