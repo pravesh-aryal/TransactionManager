@@ -138,7 +138,7 @@ void *aborttx(void *arg)
 
   //write your code
   start_operation(node->tid, node->count);
-  do_commit_abort_operation(node->tid, TR_ABORT);
+  do_commit_abort_operation(node->tid, TR_END);
   finish_operation(node->tid)
 
   pthread_exit(NULL);			// thread exit
@@ -152,7 +152,7 @@ void *committx(void *arg)
 
   //write your code
   start_operation(node->tid, node->count);
-  do_commit_abort_operation(node->tid, TR_END);
+  do_commit_abort_operation(node->tid, TR_ABORT);
   finish_operation(node->tid)
 
   pthread_exit(NULL);			// thread exit
@@ -253,6 +253,59 @@ int zgt_tx::set_lock(long tid1, long sgno1, long obno1, int count, char lockmode
   //sempool in the transaction manager. Set the appropriate parameters in the
   //transaction list if waiting.
   //if successful  return(0); else -1
+  zgt_hlink *found;
+
+  while(1){
+    zgt_p(0); // lock shared structures
+
+    found = ZGT_Ht->find(sgno1, obno1);
+
+    // CASE 1: if the object is not in the hash table then its free and we can grant lock
+    if(found == NULL){
+      ZGT_Ht->add(this, sgno1, obno1, lockmode1);
+      this->obno = obno1;
+      this->lockmode = lockmode1;
+      this->status = TR_ACTIVE;
+      zgt_v(0);
+      return(0);
+    }
+
+    // CASE 2: if same tx already holds it, we can grant lock
+    zgt_hlink *owner = ZGT_Ht->findt(tid1, sgno1, obno1);
+    if(owner != NULL){
+      this->obno = obno1;
+      this->lockmode = lockmode1;
+      zgt_v(0);
+      return(0);
+    }
+
+    // CASE 3: if different tx holds S lock, we want S then reads can share
+    if(found->lockmode == 'S' && lockmode1 == 'S'){
+      ZGT_Ht->add(this, sgno1, obno1, lockmode1);
+      this->obno = obno1;
+      this->lockmode = lockmode1;
+      this->status = TR_ACTIVE;
+      zgt_v(0);
+      return(0);
+    }
+
+    // CASE 4: if conflict then, it must wait
+    this->status = TR_WAIT;
+    this->obno = obno1;
+    this->lockmode = lockmode1;
+    this->semno = (int)found->tid; // wait on holder's semaphore
+    this->setTx_semno(tid1, (int)found->tid);
+
+    zgt_v(0); // release BEFORE blocking
+
+    zgt_p(this->semno); // block until holder commits/aborts
+
+    // woken up: check if we were aborted
+    if(this->status == TR_ABORT){
+      return(-1);
+    }
+    // else loop and retry getting the lock
+  }
   
     //write your code
   
