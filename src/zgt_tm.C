@@ -131,13 +131,42 @@ int zgt_tm::CommitTx(long tid, int thrNum)
  {
    
     //write your code
-   return(0); //successful operation
+    struct param *info = (struct param*)malloc(sizeof(struct param));
+
+    info->tid = tid;
+    info->obno = -1;
+    info->Txtype = ' ';
+    info->count = --SEQNUM[tid]; // track order of ops
+    
+    int log;
+    status = pthread_create(&threadid[thrNum], NULL, committx, (void*)info);
+    if (status)
+    {
+      printf("ERROR: result is:%d\n", log);
+      exit(-1);
+    }
+
+    return(0); //successful operation
 
  }
  
 int zgt_tm::AbortTx(long tid, int thrNum)
  {       
     //write your code
+    struct param *info = (struct param*)malloc(sizeof(struct param));
+
+    info->tid = tid;
+    info->obno = -1; 
+    info->Txtype = ' ';
+    info->count = --SEQNUM[tid]; // track order of ops
+    int log;
+   
+    status = pthread_create(&threadid[thrNum], NULL, aborttx, (void*)info);
+    if (status)
+    {
+      printf("ERROR: result is:%d\n", log);
+      exit(-1);
+    }
    return(0);  //successful operation
  }
 
