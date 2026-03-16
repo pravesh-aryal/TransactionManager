@@ -173,7 +173,7 @@ void *aborttx(void *arg)
   //write your code
   start_operation(node->tid, node->count);
   do_commit_abort_operation(node->tid, TR_END);
-  finish_operation(node->tid)
+  finish_operation(node->tid);
 
   pthread_exit(NULL);			// thread exit
 }
@@ -187,7 +187,7 @@ void *committx(void *arg)
   //write your code
   start_operation(node->tid, node->count);
   do_commit_abort_operation(node->tid, TR_ABORT);
-  finish_operation(node->tid)
+  finish_operation(node->tid);
 
   pthread_exit(NULL);			// thread exit
 }
@@ -218,7 +218,7 @@ void *do_commit_abort_operation(long t, char status){
     tx->status = status;
 
     // release locks on objects
-    tx -> free_locks(); 
+    tx->free_locks(); 
 
     // release waiting transactions on aborted/committed objects held
     // count of how many transactions are waiting on semaphore
@@ -489,7 +489,7 @@ void zgt_tx::perform_read_write_operation(long tid,long obno, char lockmode){
     ZGT_Sh->objarray[obno]->value++;
 
     #ifdef TX_DEBUG 
-      printf("TX %ld write obj %ld new value %d \n", tid, obno, ZGT_Sh->objarray[onno]->value);
+      printf("TX %ld write obj %ld new value %d \n", tid, obno, ZGT_Sh->objarray[obno]->value);
       fflush(stdout);
     #endif
   }
