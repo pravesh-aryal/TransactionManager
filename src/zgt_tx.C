@@ -101,6 +101,12 @@ void *begintx(void *arg){
 
 void *readtx(void *arg){
   struct param *node = (struct param*)arg;// get tid and objno and count
+  start_operation(node->tid, node->count);
+  
+  process_read_write_operation(node->tid, node->obno, node->count, 'S');
+  
+  finish_operation(node->tid);
+  pthread_exit(NULL);
 
   // do the operations for reading. Write your code
 }
@@ -108,6 +114,12 @@ void *readtx(void *arg){
 
 void *writetx(void *arg){ //do the operations for writing; similar to readTx
   struct param *node = (struct param*)arg;	// struct parameter that contains
+  start_operation(node->tid, node->count);
+  
+  process_read_write_operation(node->tid, node->obno, node->count, 'X');
+  
+  finish_operation(node->tid);
+  pthread_exit(NULL);
   
   // do the operations for writing; similar to readTx. Write your code
 
