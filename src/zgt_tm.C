@@ -127,6 +127,17 @@ int zgt_tm::TxWrite(long tid, long obno, int thrNum)
   //call the write function (writetx); same as above
 
     // write your code
+   struct param *nodeinfo = (struct param*)malloc(sizeof(struct param));
+   nodeinfo->tid = tid;
+   nodeinfo->obno = obno;
+   nodeinfo->Txtype = ' ';
+   nodeinfo->count = --SEQNUM[tid];
+   int status;
+   status = pthread_create(&threadid[thrNum], NULL, writetx, (void*)nodeinfo);
+   if(status){
+      printf("ERROR: return code from pthread_create() is:%d\n", status);
+      exit(-1);
+   }
     
    return(0);  // successful operation
  }
@@ -143,6 +154,7 @@ int zgt_tm::CommitTx(long tid, int thrNum)
     info->count = --SEQNUM[tid]; // track order of ops
     
     int log;
+    int status;
     status = pthread_create(&threadid[thrNum], NULL, committx, (void*)info);
     if (status)
     {
@@ -164,6 +176,7 @@ int zgt_tm::AbortTx(long tid, int thrNum)
     info->Txtype = ' ';
     info->count = --SEQNUM[tid]; // track order of ops
     int log;
+    int status;
    
     status = pthread_create(&threadid[thrNum], NULL, aborttx, (void*)info);
     if (status)
