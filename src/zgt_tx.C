@@ -204,9 +204,9 @@ void *do_commit_abort_operation(long t, char status){
   // init lock
   zgt_p(0);
 
-    zgt_tx *inittx = get_tx(t);
+    zgt_tx *tx = get_tx(t);
 
-    if (inittx == NULL) 
+    if (tx == NULL) 
     {
         fprintf(ZGT_Sh->logfile, "Trying to Commit/Abort a Tx:%d that does not exist\n", t);
         fflush(ZGT_Sh->logfile);
@@ -231,7 +231,7 @@ void *do_commit_abort_operation(long t, char status){
         {
             waiting++;
         }
-        temp = temporary->nextr;
+        temporary = temporary->nextr;
     }
     
     // do v on waiting transactions to get next for lock
@@ -244,7 +244,7 @@ void *do_commit_abort_operation(long t, char status){
     if (status == TR_END) 
     {
         fprintf(ZGT_Sh->logfile, "T%d\t  \tCommitTx\t\t\t\t\t\n", t);
-        inittx->remove_tx();
+        tx->remove_tx();
     } 
     
     else 
