@@ -13,7 +13,7 @@ MAIN=zgt_test
 #solutions dir should have src, includes, and test-files directories
 #change with your path if you are not using omega.uta.edu
 
-TXMGR= ..
+TXMGR= /Users/pravesh/Downloads/Spring2026/DBII/Project2Github/TransactionManager
 
 
 

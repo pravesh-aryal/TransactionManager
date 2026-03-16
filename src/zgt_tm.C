@@ -123,7 +123,31 @@ int zgt_tm::TxWrite(long tid, long obno, int thrNum)
   //call the write function (writetx); same as above
 
     // write your code
-    
+    #ifdef TM_DEBUG
+      printf("Creating TxWrite thread for tx: %ld\n", tid);
+      fflush(stdout);
+   #endif
+
+   pthread_t thread;
+   struct param *nodeinfo = (struct param*)malloc(sizeof(sutrct param));
+
+   nodeinfo->tid = tid;
+   nodeinfo->obno = obno;
+   nodeinfo->Txtype = ' ';
+   nodeinfo->count = --SEQNUM[tid];
+   
+   int status;
+   status = pthread_create(&threadid[thrNum], NULL, writetx, (void *)nodeinfo);
+
+   if (status) {
+      printf("error: return code from pthread_creat() is %d\n", status);
+      exit(-1);
+   }
+   #ifdef TM_DEBUG
+      printf("exiting txwrite thread create for tx: %ld\n", tid);
+      fflush(stdout);
+   #endif
+   
    return(0);  // successful operation
  }
 
