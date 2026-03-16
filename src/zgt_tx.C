@@ -113,6 +113,7 @@ void *readtx(void *arg){
 
 
 void *writetx(void *arg){ //do the operations for writing; similar to readTx
+
   struct param *node = (struct param*)arg;	// struct parameter that contains
   start_operation(node->tid, node->count);
   
@@ -129,6 +130,39 @@ void *writetx(void *arg){ //do the operations for writing; similar to readTx
 
 void *process_read_write_operation(long tid, long obno,  int count, char mode){
 
+  zgt_tx *tx;
+
+  start_operation(tid, count);
+  tx = get_tx(tid); //get the transaction object
+  if (tx == NULL) 
+  {
+    printf("ERROR: transaction %ld not found \n", tid);
+    fflush(stdout);
+    finish_operation(tid);
+    return NULL;
+  }
+  
+  if (tx->set_lock(tid, 1, obno, count, mode) < 0)
+  {
+    printf("ERROR: unable to get lock for tx %ld on object %ld", tid, obno);
+    fflush(stdout);
+    finish_operation(tid);
+    return NULL;
+  }
+  tx->perform_read_write_operation(tid, obno, mode);
+
+  //loogging
+  if (mode == 'S') 
+  {
+    fprintf(ZGT_Sh->logfile, "T%ld\tReadTx\tObject:%ld\tlock:S", tid, obno);
+  }
+  else if (mode == 'X')
+  {
+    fprintf(ZGT_Sh->logfile, "T%ld\tWriteTX\tObject:%ld\tLock:X\n", tid, obno);
+  }
+  fflush(ZGT_Sh->logfile);
+  finish_operation(tid);
+  return NULL;
   
 }
 
@@ -428,6 +462,37 @@ void zgt_tx::print_lock(){
 void zgt_tx::perform_read_write_operation(long tid,long obno, char lockmode){
   
   // write your code
+  zgt_tx *tx = get_tx(tid);
+
+  if (tx == NULL)
+  {
+    printf("error: transcation %ld not found \n", tid);
+    fflush(stdout);
+    return;
+  }
+
+  //uppdating the tx info
+  tx->obno = obno;
+  tx->lockmode = lockmode;
+
+  if (lockmode == 'S') 
+  {
+    int value = ZGT_Sh->objarray[obno]->value;
+    #ifdef TX_DEBUG
+      printf("Tx %ld READ obj %ld value %d \n", tid, obno, value);
+      fflush(stdout);
+    #endif
+
+  }
+  else if (lockmode == 'X') 
+  {
+    ZGT_Sh->objarray[obno]->value++;
+
+    #ifdef TX_DEBUG 
+      printf("TX %ld write obj %ld new value %d \n", tid, obno, ZGT_Sh->objarray[onno]->value);
+      fflush(stdout);
+    #endif
+  }
 
 }
 
