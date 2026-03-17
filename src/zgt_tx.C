@@ -223,13 +223,15 @@ void *do_commit_abort_operation(long t, char status){
     // release waiting transactions on aborted/committed objects held
     // count of how many transactions are waiting on semaphore
     int waiting = 0;
+    int waiting_semnos[MAX_TRANSACTIONS];
     zgt_tx *temporary = ZGT_Sh->lastr;
 
     while (temporary != NULL) 
     {
         if (temporary->semno == t && temporary->status == TR_WAIT) 
         {
-            waiting++;
+          // waiting++;
+          waiting_semnos[waiting++] = (int)temporary->semno;
         }
         temporary = temporary->nextr;
     }
@@ -237,7 +239,8 @@ void *do_commit_abort_operation(long t, char status){
     // do v on waiting transactions to get next for lock
     for (int i = 0; i < waiting; i++) 
     {
-        zgt_v(t); 
+        // zgt_v(t); 
+        zgt_v(waiting_semnos[i]);
     }
 
     // Write to the log file
