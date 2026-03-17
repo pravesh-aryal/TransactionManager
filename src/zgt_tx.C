@@ -172,7 +172,7 @@ void *aborttx(void *arg)
 
   //write your code
   start_operation(node->tid, node->count);
-  do_commit_abort_operation(node->tid, TR_END);
+  do_commit_abort_operation(node->tid, TR_ABORT);
   finish_operation(node->tid);
 
   pthread_exit(NULL);			// thread exit
@@ -186,7 +186,7 @@ void *committx(void *arg)
 
   //write your code
   start_operation(node->tid, node->count);
-  do_commit_abort_operation(node->tid, TR_ABORT);
+  do_commit_abort_operation(node->tid, TR_END);
   finish_operation(node->tid);
 
   pthread_exit(NULL);			// thread exit
