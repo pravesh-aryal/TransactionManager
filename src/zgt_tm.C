@@ -13,7 +13,7 @@
 #include "zgt_tm.h"
 #include "zgt_extern.h"
 
-#define TEAM_NO      88     //insert your team number here
+#define TEAM_NO      7     //insert your team number here
  
 
 // Modified to fix handling with 'end all' as last input
@@ -108,7 +108,7 @@ int zgt_tm::TxRead(long tid, long obno, int thrNum)
 
    int status;
 
-   status = pthread_create(&threadid[thrNum], NULL, writetx, (void*)nodeinfo);
+   status = pthread_create(&threadid[thrNum], NULL, readtx, (void*)nodeinfo);
 
    if (status){
      printf("ERROR: return code from pthread_create() is:%d\n", status);
