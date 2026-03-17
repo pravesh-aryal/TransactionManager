@@ -132,7 +132,7 @@ void *process_read_write_operation(long tid, long obno,  int count, char mode){
 
   zgt_tx *tx;
 
-  start_operation(tid, count);
+  //start_operation(tid, count);
   tx = get_tx(tid); //get the transaction object
   if (tx == NULL) 
   {
@@ -161,7 +161,7 @@ void *process_read_write_operation(long tid, long obno,  int count, char mode){
     fprintf(ZGT_Sh->logfile, "T%ld\tWriteTX\tObject:%ld\tLock:X\n", tid, obno);
   }
   fflush(ZGT_Sh->logfile);
-  finish_operation(tid);
+  //finish_operation(tid);
   return NULL;
   
 }
