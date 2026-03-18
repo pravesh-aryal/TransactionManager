@@ -93,7 +93,7 @@ int zgt_tm::TxRead(long tid, long obno, int thrNum)
    //  Call the read function in transaction. 
    //now create the thread and call the method readtx(void *)
    #ifdef TM_DEBUG
-   printf("\ncreating TxWrite thread for Tx: %ld\n", tid);
+   printf("\ncreating TxRead thread for Tx: %ld\n", tid);
    fflush(stdout);
 #endif
 
@@ -116,7 +116,7 @@ int zgt_tm::TxRead(long tid, long obno, int thrNum)
    }
 
 #ifdef TM_DEBUG
-   printf("\nexiting TxWrite thread create for Tx: %ld\n", tid);
+   printf("\nfinished creating TxRead thread  for Tx: %ld\n", tid);
    fflush(stdout);
 #endif
    return(0); //successful operation
@@ -127,18 +127,33 @@ int zgt_tm::TxWrite(long tid, long obno, int thrNum)
   //call the write function (writetx); same as above
 
     // write your code
+    #ifdef TM_DEBUG
+   printf("\ncreating TxWrite thread for Tx: %ld\n", tid);
+   fflush(stdout);
+#endif
+
+   pthread_t thread1;
+
    struct param *nodeinfo = (struct param*)malloc(sizeof(struct param));
    nodeinfo->tid = tid;
    nodeinfo->obno = obno;
    nodeinfo->Txtype = ' ';
    nodeinfo->count = --SEQNUM[tid];
+
    int status;
+
    status = pthread_create(&threadid[thrNum], NULL, writetx, (void*)nodeinfo);
-   if(status){
-      printf("ERROR: return code from pthread_create() is:%d\n", status);
-      exit(-1);
+
+   if (status){
+     printf("erorr- return code from pthread_create() is:%d\n", status);
+     exit(-1);
    }
-    
+
+#ifdef TM_DEBUG
+   printf("\nfinished creating TxWrite thread create for Tx: %ld\n", tid);
+   fflush(stdout);
+#endif
+
    return(0);  // successful operation
  }
 
@@ -158,7 +173,7 @@ int zgt_tm::CommitTx(long tid, int thrNum)
     status = pthread_create(&threadid[thrNum], NULL, committx, (void*)info);
     if (status)
     {
-      printf("ERROR: result is:%d\n", log);
+      printf("eror- cannot create thread for:%d\n", log);
       exit(-1);
     }
 
@@ -174,14 +189,12 @@ int zgt_tm::AbortTx(long tid, int thrNum)
     info->tid = tid;
     info->obno = -1; 
     info->Txtype = ' ';
-    info->count = --SEQNUM[tid]; // track order of ops
-    int log;
+    info->count = --SEQNUM[tid]; 
     int status;
-   
     status = pthread_create(&threadid[thrNum], NULL, aborttx, (void*)info);
     if (status)
     {
-      printf("ERROR: result is:%d\n", log);
+      printf("ERROR: result is:%d\n", status);
       exit(-1);
     }
    return(0);  //successful operation
@@ -260,57 +273,57 @@ int zgt_tm::ddlockDet()
 
 int zgt_tm::chooseVictim()
  {       
-#ifdef TM_DEBUG
-   printf("\ncreating chooseVictim thread\n");
+   #ifdef TM_DEBUG
+      printf("\ncreating chooseVictim thread\n");
+      fflush(stdout);
+   #endif
+
+      pthread_t thread1;
+      int  status;
+      //   status=pthread_create(&thread1, NULL,choosevictim,(void*)NULL);	// Fork a thread and pass tid
+      //if (status){
+      //printf("ERROR: return code from pthread_create() is:%d\n", status);
+      //exit(-1);
+      //}
+   #ifdef TM_DEBUG
+      printf("\nleaving chooseVictim creating thread\n");
+      fflush(stdout);
+   #endif
+      return(0);  //successful operation
+   }
+
+   //important; understand this
+   zgt_tm::zgt_tm()
+   {
+
+   #ifdef TM_DEBUG
+      printf("\nInitializing the TM\n");
+      fflush(stdout);
+   #endif
+   int i,init;
+
+      lastr = NULL;
+   //initialize objarray; each element points to a different item
+   for(i=0;i<MAX_ITEMS;++i)
+      objarray[i] = new item(0);  //all init'd to zero
+
+   //initialize optime for the thread to sleep;
+   //get a int from random function to sleep 
+
+   int seed = 7919; //prime num   
+   srand(seed);  /*initialize random number generator*/ 
+   int M = 1000ll;  /* Multiplier */ 
+   for(i=1; i<MAX_TRANSACTIONS+1; ++i) 
+      { 
+         double r = ( (double)rand() / (double)(RAND_MAX+1.0) ); //RAND_MAX is defined in stdlib
+         double x = (r * M * TEAM_NO); 
+         int y = (int) x; 
+         optime[i]= abs(y); 
+   #ifdef TM_DEBUG
+   printf("\nValues of i, r, x, and y are: %d, %f, %f, %d\n", i, r, x, y);
    fflush(stdout);
-#endif
-
-   pthread_t thread1;
-   int  status;
-   //   status=pthread_create(&thread1, NULL,choosevictim,(void*)NULL);	// Fork a thread and pass tid
-   //if (status){
-   //printf("ERROR: return code from pthread_create() is:%d\n", status);
-   //exit(-1);
-   //}
-#ifdef TM_DEBUG
-   printf("\nleaving chooseVictim creating thread\n");
-   fflush(stdout);
-#endif
-   return(0);  //successful operation
- }
-
-//important; understand this
-zgt_tm::zgt_tm()
-{
-
-#ifdef TM_DEBUG
-   printf("\nInitializing the TM\n");
-   fflush(stdout);
-#endif
-  int i,init;
-
-   lastr = NULL;
-  //initialize objarray; each element points to a different item
-  for(i=0;i<MAX_ITEMS;++i)
-    objarray[i] = new item(0);  //all init'd to zero
-
-  //initialize optime for the thread to sleep;
-  //get a int from random function to sleep 
-
-  int seed = 7919; //prime num   
-  srand(seed);  /*initialize random number generator*/ 
-  int M = 1000ll;  /* Multiplier */ 
-  for(i=1; i<MAX_TRANSACTIONS+1; ++i) 
-    { 
-      double r = ( (double)rand() / (double)(RAND_MAX+1.0) ); //RAND_MAX is defined in stdlib
-      double x = (r * M * TEAM_NO); 
-      int y = (int) x; 
-      optime[i]= abs(y); 
-#ifdef TM_DEBUG
-//   printf("\nValues of i, r, x, and y are: %d, %f, %f, %d\n", i, r, x, y);
-//  fflush(stdout);
-#endif
-    }
+   #endif
+}
 
 
   //initialize condpool and mutexpool
