@@ -1,6 +1,6 @@
 # Transaction Manager
 
-A multithreaded **transaction manager** written in C++. It runs a schedule of database transactions concurrently and keeps them correct using **Strict Two-Phase Locking (Strict 2PL)** with shared (read) and exclusive (write) locks.
+A multithreaded **transaction manager** written in C. It runs a schedule of database transactions concurrently and keeps them correct using **Strict Two-Phase Locking (Strict 2PL)** with shared (read) and exclusive (write) locks.
 
 Each operation in an input schedule (`BeginTx`, `Read`, `Write`, `Commit`, `Abort`) runs on its own POSIX thread. The manager grants or blocks locks, makes conflicting transactions wait, and releases every lock a transaction holds when it commits or aborts. Every step is written to a log file so you can trace the interleaving.
 
